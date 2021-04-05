@@ -1,38 +1,97 @@
+<!DOCTYPE html>
 <html>
-    <head>
-      <meta charset="UTF-8"/> 
-      <title>Homepage</title>
-    </head>
-    <body>
-      <h1>Homepage</h1>
-      <form method="get" action="#">
-        <input type="text" name="q"/>
-        <button type="button" onclick="query()">Query</button>
-      </form>
-      <script>
-        var base_url = "https://mvix73jmb2.execute-api.eu-west-1.amazonaws.com"
-        var search_url = base_url + "/search"
+  <head>
+      <title>Example Serverless App</title>
+      <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+      <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <h1>Search for Apartment Offers</h1>
+    <div id="app">
+      <label for="number_bedrooms">Number of Bedrooms</label>
+      <select v-model="number_bedrooms">
+        <option disabled value="">Select</option>
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+      </select>
+      <br>
+      <label for="number_bathrooms">Number of Bathrooms</label>
+      <select v-model="number_bathrooms">
+        <option disabled value="">Select</option>
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+      </select>
+      <br>
+      <button v-on:click="search(number_bedrooms, number_bathrooms)">Search</button>
 
-        var init = new Headers();
-
-        var config = {
-          method: 'GET',
-          headers: init,
-          mode: 'cors',
-          cache: 'default'};
-
-        function query() {
-
-            fetch(search_url, config)
-            .then(function(response) {
-                response.json().then(function(json) {
-                    console.log(json);
-                });
-            })
-            .catch(function(error) {
-              console.log("Error", error);
-            })
+      <table>
+        <thead>
+          <th>Address</th>
+          <th>Bedrooms</th>
+          <th>Bathrooms</th>
+          <th>Price</th>
+          <th>Publish Date</th>
+          <th>Link</th>
+        </thead>
+        <tbody>
+          <tr v-cloak v-if="offers.length > 0" v-for="offer in offers" :key="offer.price">
+            <td>
+              {{ offer.display_address }}
+            </td>
+            <td>
+              {{ offer.number_bedrooms }}
+            </td>
+            <td>
+              {{ offer.number_bathrooms }}
+            </td>
+            <td>
+              {{ offer.price }}/{{ offer.price_period }}
+            </td>
+            <td>
+              {{ offer.publish_date }}
+            </td>
+            <td>
+              <a v-bind:href="offer.page_url" target="_blank">Open</a>
+            </td>
+          </tr>
+          <tr v-cloak v-show="offers.length == 0">
+            <td colspan="6">No offers found, check the search criteria and try again.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script>
+      var app = new Vue({
+        el: '#app',
+        data: {
+            number_bedrooms: '',
+            number_bathrooms: '',
+            offers: [],
+        },
+        methods: {
+            search: function(number_bedrooms, number_bathrooms) {
+                if (number_bedrooms == '' || number_bathrooms == '') {
+                  return;
+                }
+                vm = this;
+                search_url = 'https://2ansk0ayt1.execute-api.eu-west-1.amazonaws.com/search?number_bedrooms='+number_bedrooms+'&number_bathrooms='+number_bathrooms
+                axios.get(search_url)
+                    .then(function(response) {
+                      vm.offers = response.data.offers;
+                    })
+                    .catch(function(error) {
+                      console.log(error);
+                    });
+            }
         }
-      </script>
-    </body>
+      })
+    </script>
+  </body>
 </html>
+
