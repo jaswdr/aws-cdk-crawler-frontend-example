@@ -1,53 +1,84 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
   <head>
-      <title>Example Serverless App</title>
-      <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-      <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Apartment Search - CDK Example</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
   </head>
   <body>
-    <h1>Search for Apartment Offers</h1>
     <div id="app">
-      <label for="number_bedrooms">Number of Bedrooms</label>
-      <select v-model="number_bedrooms">
-        <option disabled value="">Select</option>
-        <option>1</option>
-        <option>2</option>
-        <option>3</option>
-        <option>4</option>
-        <option>5</option>
-      </select>
-      <br>
-      <label for="number_bathrooms">Number of Bathrooms</label>
-      <select v-model="number_bathrooms">
-        <option disabled value="">Select</option>
-        <option>1</option>
-        <option>2</option>
-        <option>3</option>
-        <option>4</option>
-        <option>5</option>
-      </select>
-      <br>
-      <button v-on:click="search(number_bedrooms, number_bathrooms)">Search</button>
-
-      <table>
+			<!-- Search Form -->
+			<div class="col-md col-md-8 col-md-offset-2">
+			<h1 class="text-center">Search for Apartment Offers</h1>
+			<form @submit="search">
+				<div class="form-group">
+					<label for="number_bedrooms">&numero; of Bedrooms</label>
+					<label class="radio-inline">
+						<input type="radio" name="number_bedrooms" id="number_bedrooms" value="1" v-model="number_bedrooms"> 1
+					</labelv-model="number_bedrooms">
+					<label class="radio-inline">
+						<input type="radio" name="number_bedrooms" id="number_bedrooms" value="2" v-model="number_bedrooms"> 2
+					</labelv-model="number_bedrooms">
+					<label class="radio-inline">
+						<input type="radio" name="number_bedrooms" id="number_bedrooms" value="3" v-model="number_bedrooms"> 3
+					</labelv-model="number_bedrooms">
+					<label class="radio-inline">
+						<input type="radio" name="number_bedrooms" id="number_bedrooms" value="4" v-model="number_bedrooms"> 4
+					</labelv-model="number_bedrooms">
+					<label class="radio-inline">
+						<input type="radio" name="number_bedrooms" id="number_bedrooms" value="5" v-model="number_bedrooms"> 5
+					</label>
+				</div>
+				<div class="form-group">
+					<label for="number_bathrooms">&numero; of Bathrooms</label>
+					<label class="radio-inline">
+						<input type="radio" name="number_bathrooms" id="number_bathrooms" value="1" v-model="number_bathrooms"> 1
+					</label>
+					<label class="radio-inline">
+						<input type="radio" name="number_bathrooms" id="number_bathrooms" value="2" v-model="number_bathrooms"> 2
+					</label>
+					<label class="radio-inline">
+						<input type="radio" name="number_bathrooms" id="number_bathrooms" value="3" v-model="number_bathrooms"> 3
+					</label>
+					<label class="radio-inline">
+						<input type="radio" name="number_bathrooms" id="number_bathrooms" value="4" v-model="number_bathrooms"> 4
+					</label>
+					<label class="radio-inline">
+						<input type="radio" name="number_bathrooms" id="number_bathrooms" value="5" v-model="number_bathrooms"> 5
+					</label>
+				</div>
+				<button type="submit" class="btn btn-default">Search</button>
+			</form>
+			<!-- Search Form -->
+      <table class="table table-striped" v-cloak v-if="touched">
         <thead>
           <th>Address</th>
           <th>Bedrooms</th>
           <th>Bathrooms</th>
           <th>Price</th>
           <th>Publish Date</th>
-          <th>Link</th>
         </thead>
         <tbody>
           <tr v-cloak v-if="offers.length > 0" v-for="offer in offers" :key="offer.price">
             <td>
-              {{ offer.display_address }}
+							<a v-bind:href="offer.page_url" target="_blank">{{ offer.display_address }}</a>
             </td>
-            <td>
+            <td class="text-center">
               {{ offer.number_bedrooms }}
             </td>
-            <td>
+            <td class="text-center">
               {{ offer.number_bathrooms }}
             </td>
             <td>
@@ -56,9 +87,6 @@
             <td>
               {{ offer.publish_date }}
             </td>
-            <td>
-              <a v-bind:href="offer.page_url" target="_blank">Open</a>
-            </td>
           </tr>
           <tr v-cloak v-show="offers.length == 0">
             <td colspan="6">No offers found, check the search criteria and try again.</td>
@@ -66,32 +94,8 @@
         </tbody>
       </table>
     </div>
-    <script>
-      var app = new Vue({
-        el: '#app',
-        data: {
-            number_bedrooms: '',
-            number_bathrooms: '',
-            offers: [],
-        },
-        methods: {
-            search: function(number_bedrooms, number_bathrooms) {
-                if (number_bedrooms == '' || number_bathrooms == '') {
-                  return;
-                }
-                vm = this;
-                search_url = 'https://2ansk0ayt1.execute-api.eu-west-1.amazonaws.com/search?number_bedrooms='+number_bedrooms+'&number_bathrooms='+number_bathrooms
-                axios.get(search_url)
-                    .then(function(response) {
-                      vm.offers = response.data.offers;
-                    })
-                    .catch(function(error) {
-                      console.log(error);
-                    });
-            }
-        }
-      })
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/main.js"></script>
   </body>
 </html>
-
